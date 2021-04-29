@@ -14,11 +14,7 @@ public class Solution21 {
             }
             pointer = pointer.next;
         }
-        if (l1 != null) {
-            pointer.next = l1;
-        } else {
-            pointer.next = l2;
-        }
+        pointer.next = l1 != null ? l1 : l2;
         return root.next;
     }
 }
