@@ -1,3 +1,5 @@
+package leetcode;
+
 public class Solution70 {
     public int climbStairs(int n) {
         int a = 1, b = 1;
