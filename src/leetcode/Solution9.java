@@ -1,5 +1,6 @@
 public class Solution9 {
     public boolean isPalindrome(int x) {
+<<<<<<< HEAD
         if (x < 0 || (x != 0 && x % 10 == 0)) {
             return false;
         }

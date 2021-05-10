@@ -1,3 +1,5 @@
+package leetcode;
+
 public class Solution7 {
 
     public int reverse(int x) {

@@ -1,3 +1,5 @@
+package leetcode;
+
 public class Solution96 {
     public int mySqrt(int x) {
         int left = 0;

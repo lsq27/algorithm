@@ -1,3 +1,5 @@
+package leetcode;
+
 public class Solution38 {
     public String countAndSay(int n) {
         String seed = "1";

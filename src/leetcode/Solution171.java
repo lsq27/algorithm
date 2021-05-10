@@ -1,3 +1,5 @@
+package leetcode;
+
 public class Solution171 {
     public int titleToNumber(String columnTitle) {
         int result = 0;

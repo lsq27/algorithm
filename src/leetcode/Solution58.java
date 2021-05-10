@@ -1,3 +1,5 @@
+package leetcode;
+
 public class Solution58 {
     public int lengthOfLastWord(String s) {
         int count = 0;

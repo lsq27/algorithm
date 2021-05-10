@@ -1,3 +1,5 @@
+package leetcode;
+
 public class Solution83 {
     public ListNode deleteDuplicates(ListNode head) {
         ListNode point = head;
