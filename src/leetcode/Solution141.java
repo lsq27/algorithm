@@ -1,5 +1,9 @@
+package leetcode;
+
 import java.util.HashSet;
 import java.util.Set;
+
+import common.ListNode;
 
 public class Solution141 {
     public class Solution {
