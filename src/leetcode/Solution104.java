@@ -1,5 +1,9 @@
+package leetcode;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import common.TreeNode;
 
 public class Solution104 {
     public int maxDepth(TreeNode root) {
