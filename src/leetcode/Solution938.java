@@ -19,7 +19,7 @@ public class Solution938 {
 
     public int rangeSumBST2(TreeNode root, int low, int high) {
         int sum = 0;
-        Queue<TreeNode> q = new LinkedList<TreeNode>();
+        Queue<TreeNode> q = new LinkedList<>();
         q.offer(root);
         while (!q.isEmpty()) {
             TreeNode node = q.poll();
