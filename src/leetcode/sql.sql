@@ -94,7 +94,15 @@ WHERE S1.PEOPLE >= 100 AND S2.PEOPLE >= 100 AND S3.PEOPLE >= 100
 AND ((S1.ID = S2.ID - 1 AND S1.ID = S3.ID - 2) OR (S1.ID = S2.ID - 1 AND S1.ID = S3.ID + 1) OR (S1.ID = S2.ID + 1 AND S1.ID = S3.ID + 2))
 ORDER BY S1.ID
 -- 607
+SELECT NAME FROM SalesPerson S
+WHERE NOT EXISTS
+(SELECT 1 FROM Orders O JOIN Company C ON O.com_id = C.com_id
+WHERE C.NAME = 'RED' AND O.SALES_ID = S.SALES_ID)
 
+SELECT NAME FROM SalesPerson S
+WHERE S.SALES_ID NOT IN
+(SELECT O.SALES_ID FROM Orders O JOIN Company C ON O.com_id = C.com_id
+WHERE C.NAME = 'RED')
 -- 608
 SELECT
 ID,
@@ -104,3 +112,15 @@ WHEN NOT EXISTS (SELECT 1 FROM TREE WHERE P_ID = T.ID) THEN 'Leaf'
 ELSE 'Inner'
 END TYPE
 FROM TREE T
+-- 610
+SELECT x,y,z,
+CASE WHEN x + y > z AND x + z > y AND y + z > x THEN 'Yes' ELSE 'No' END triangle
+FROM triangle
+-- 619
+SELECT MAX(num) num FROM
+(SELECT num FROM MyNumbers GROUP BY num HAVING COUNT(1) = 1) t
+-- 620
+SELECT *
+FROM cinema
+WHERE description != 'boring' AND id % 2 = 1
+ORDER BY rating DESC
