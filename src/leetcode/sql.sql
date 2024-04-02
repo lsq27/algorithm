@@ -143,6 +143,11 @@ SELECT
 id, IF(id % 2 = 1, LEAD(student, 1, student) OVER (ORDER BY id), LAG(student, 1) OVER (ORDER BY id)) student
 FROM seat
 ORDER BY id
+-- 1045
+SELECT customer_id
+FROM customer
+GROUP BY customer_id
+HAVING COUNT(DISTINCT product_key) = (SELECT COUNT(1) FROM product)
 -- 1174
 SELECT ROUND(SUM(order_date = customer_pref_delivery_date) / COUNT(1) * 100, 2) immediate_percentage
 FROM delivery
