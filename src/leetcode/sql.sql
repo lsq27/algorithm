@@ -88,6 +88,15 @@ SELECT ROUND(SUM(TIV_2016),2) TIV_2016 FROM
 (SELECT TIV_2016, COUNT(1) OVER (PARTITION BY TIV_2015) NUM1, COUNT(1) OVER (PARTITION BY LAT,LON) NUM2
 FROM INSURANCE) I
 WHERE I.NUM1 > 1 AND I.NUM2 = 1
+-- 595
+SELECT name, population, area
+FROM World
+WHERE area >= 3000000 OR population >= 25000000
+-- 596
+SELECT class
+FROM Courses
+GROUP BY class
+HAVING COUNT(student) >= 5
 -- 601
 SELECT DISTINCT S1.* FROM STADIUM S1,STADIUM S2,STADIUM S3
 WHERE S1.PEOPLE >= 100 AND S2.PEOPLE >= 100 AND S3.PEOPLE >= 100
@@ -124,3 +133,24 @@ SELECT *
 FROM cinema
 WHERE description != 'boring' AND id % 2 = 1
 ORDER BY rating DESC
+-- 626
+SELECT
+CASE WHEN id % 2 = 1 AND id = seat_count.counts THEN id WHEN id % 2 = 1 THEN id + 1 ELSE id - 1 END id, student
+FROM seat, (SELECT MAX(id) counts FROM Seat) seat_count
+ORDER BY id
+
+SELECT
+id, IF(id % 2 = 1, LEAD(student, 1, student) OVER (ORDER BY id), LAG(student, 1) OVER (ORDER BY id)) student
+FROM seat
+ORDER BY id
+-- 1174
+SELECT ROUND(SUM(order_date = customer_pref_delivery_date) / COUNT(1) * 100, 2) immediate_percentage
+FROM delivery
+WHERE (customer_id, order_date) IN
+(SELECT customer_id, MIN(order_date) FROM delivery GROUP BY customer_id)
+
+SELECT ROUND(SUM(order_date = customer_pref_delivery_date) / COUNT(1) * 100, 2) immediate_percentage
+FROM
+(SELECT order_date, customer_pref_delivery_date, RANK() OVER (PARTITION BY customer_id ORDER BY order_date) rk
+FROM delivery) t1
+WHERE rk = 1
