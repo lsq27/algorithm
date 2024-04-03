@@ -159,3 +159,9 @@ FROM
 (SELECT order_date, customer_pref_delivery_date, RANK() OVER (PARTITION BY customer_id ORDER BY order_date) rk
 FROM delivery) t1
 WHERE rk = 1
+-- 1193
+SELECT
+DATE_FORMAT(trans_date, '%Y-%m') month, country, COUNT(1) trans_count, SUM(state = 'approved') approved_count,
+SUM(amount) trans_total_amount, SUM(IF(state = 'approved', amount, 0)) approved_total_amount
+FROM transactions
+GROUP BY country, month
