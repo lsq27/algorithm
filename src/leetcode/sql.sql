@@ -165,3 +165,26 @@ DATE_FORMAT(trans_date, '%Y-%m') month, country, COUNT(1) trans_count, SUM(state
 SUM(amount) trans_total_amount, SUM(IF(state = 'approved', amount, 0)) approved_total_amount
 FROM transactions
 GROUP BY country, month
+-- 1179
+SELECT id,
+SUM(IF(month = 'Jan', revenue, NULL)) Jan_Revenue,
+SUM(IF(month = 'Feb', revenue, NULL)) Feb_Revenue,
+SUM(IF(month = 'Mar', revenue, NULL)) Mar_Revenue,
+SUM(IF(month = 'Apr', revenue, NULL)) Apr_Revenue,
+SUM(IF(month = 'May', revenue, NULL)) May_Revenue,
+SUM(IF(month = 'Jun', revenue, NULL)) Jun_Revenue,
+SUM(IF(month = 'Jul', revenue, NULL)) Jul_Revenue,
+SUM(IF(month = 'Aug', revenue, NULL)) Aug_Revenue,
+SUM(IF(month = 'Sep', revenue, NULL)) Sep_Revenue,
+SUM(IF(month = 'Oct', revenue, NULL)) Oct_Revenue,
+SUM(IF(month = 'Nov', revenue, NULL)) Nov_Revenue,
+SUM(IF(month = 'Dec', revenue, NULL)) Dec_Revenue
+FROM department
+GROUP BY id
+-- 1211
+SELECT query_name,
+ROUND(AVG(rating / position), 2) quality,
+ROUND(SUM(rating < 3) * 100 / COUNT(1), 2) poor_query_percentage
+FROM queries
+WHERE query_name IS NOT NULL
+GROUP BY query_name
