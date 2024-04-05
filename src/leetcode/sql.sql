@@ -188,3 +188,18 @@ ROUND(SUM(rating < 3) * 100 / COUNT(1), 2) poor_query_percentage
 FROM queries
 WHERE query_name IS NOT NULL
 GROUP BY query_name
+-- 1204
+SELECT q1.person_name
+FROM queue q1, queue q2
+WHERE q1.turn >= q2.turn
+GROUP BY q1.person_name
+HAVING SUM(q2.weight) <= 1000
+ORDER BY q1.turn DESC
+LIMIT 1
+
+SELECT person_name
+FROM
+(SELECT turn, person_name, SUM(weight) OVER (ORDER BY turn) total FROM queue) t
+WHERE total <= 1000
+ORDER BY turn DESC
+LIMIT 1
