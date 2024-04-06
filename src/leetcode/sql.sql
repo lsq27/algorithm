@@ -88,6 +88,12 @@ SELECT ROUND(SUM(TIV_2016),2) TIV_2016 FROM
 (SELECT TIV_2016, COUNT(1) OVER (PARTITION BY TIV_2015) NUM1, COUNT(1) OVER (PARTITION BY LAT,LON) NUM2
 FROM INSURANCE) I
 WHERE I.NUM1 > 1 AND I.NUM2 = 1
+-- 586
+SELECT customer_number
+FROM Orders
+GROUP BY customer_number
+ORDER BY COUNT(1) DESC
+LIMIT 1
 -- 595
 SELECT name, population, area
 FROM World
@@ -143,11 +149,94 @@ SELECT
 id, IF(id % 2 = 1, LEAD(student, 1, student) OVER (ORDER BY id), LAG(student, 1) OVER (ORDER BY id)) student
 FROM seat
 ORDER BY id
+-- 627 第四种有点意思
+UPDATE Salary SET sex = CASE sex WHEN 'f' THEN 'm' ELSE 'f' END
+
+UPDATE Salary SET sex = CASE WHEN sex = 'f' THEN 'm' ELSE 'f' END
+
+UPDATE Salary SET sex = IF(sex = 'f', 'm', 'f')
+
+UPDATE Salary SET sex = char(211 - ascii(sex))
 -- 1045
 SELECT customer_id
 FROM customer
 GROUP BY customer_id
 HAVING COUNT(DISTINCT product_key) = (SELECT COUNT(1) FROM product)
+-- 1068
+-- USING 适用于两个表之间有同名列的情况，可以简化语法；
+-- ON 适用于没有同名列或需要指定非等值匹配的情况，使用更灵活；
+-- WHERE 可以实现连接效果，但不如使用 ON 或 USING 方便和直观。
+SELECT product_name, year, price
+FROM Sales s, Product p
+WHERE s.product_id = p.product_id
+
+SELECT product_name, year, price
+FROM Sales s
+JOIN Product p
+ON s.product_id = p.product_id
+
+SELECT product_name, year, price
+FROM Sales
+JOIN Product
+USING (product_id)
+-- 1075
+SELECT p.project_id, ROUND(AVG(experience_years), 2) average_years
+FROM Project p
+JOIN Employee e
+ON p.employee_id = e.employee_id
+GROUP BY p.project_id
+-- 1141 DATEDIFF DATE_ADD DATE_SUB
+SELECT activity_date day, COUNT(DISTINCT user_id) active_users
+FROM Activity
+WHERE activity_date BETWEEN '2019-06-28' AND '2019-07-27'
+GROUP BY activity_date
+
+SELECT activity_date day, COUNT(DISTINCT user_id) active_users
+FROM Activity
+WHERE DATEDIFF("2019-07-27", activity_date) BETWEEN 0 AND 29
+GROUP BY activity_date
+
+SELECT activity_date day, COUNT(DISTINCT user_id) active_users
+FROM Activity
+WHERE activity_date BETWEEN DATE_ADD('2019-07-27',INTERVAL -29 day) AND '2019-07-27'
+GROUP BY activity_date
+
+SELECT activity_date day, COUNT(DISTINCT user_id) active_users
+FROM Activity
+WHERE activity_date BETWEEN DATE_SUB('2019-07-27',INTERVAL 29 day) AND '2019-07-27'
+GROUP BY activity_date
+-- 1148 DISTINCT、GROUP BY 都可以去重，
+-- MySQL 8.0之前的版本 DISTINCT 的效率要比 GROUP BY 的去重效率高，因为 GROUP BY 会有隐式排序，8.0之后移除了
+SELECT DISTINCT author_id id
+FROM Views
+WHERE author_id = viewer_id
+ORDER BY id
+
+SELECT author_id id
+FROM Views
+WHERE author_id = viewer_id
+GROUP BY author_id
+ORDER BY id
+-- 1164 最新用 GROUP BY MAX 也可以用窗口函数
+SELECT p.product_id, IFNULL(t.new_price, 10) price
+FROM
+(SELECT DISTINCT product_id FROM Products) p
+LEFT JOIN
+(SELECT product_id, new_price FROM
+(SELECT product_id, new_price, ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY change_date DESC) rk
+FROM Products WHERE change_date <= '2019-08-16') t
+WHERE rk = 1) t
+ON p.product_id = t.product_id
+
+SELECT p.product_id, IFNULL(t.new_price, 10) price
+FROM
+(SELECT DISTINCT product_id FROM Products) p
+LEFT JOIN
+(SELECT product_id, new_price
+FROM Products
+WHERE (product_id, change_date) IN
+(SELECT product_id, MAX(change_date) FROM Products WHERE change_date <= '2019-08-16' GROUP BY product_id)) t
+ON p.product_id = t.product_id
 -- 1174
 SELECT ROUND(SUM(order_date = customer_pref_delivery_date) / COUNT(1) * 100, 2) immediate_percentage
 FROM delivery
@@ -192,7 +281,7 @@ GROUP BY query_name
 SELECT q1.person_name
 FROM queue q1, queue q2
 WHERE q1.turn >= q2.turn
-GROUP BY q1.person_name
+GROUP BY q1.person_name, q1.turn
 HAVING SUM(q2.weight) <= 1000
 ORDER BY q1.turn DESC
 LIMIT 1
@@ -203,3 +292,26 @@ FROM
 WHERE total <= 1000
 ORDER BY turn DESC
 LIMIT 1
+-- 1251
+SELECT p.product_id, IFNULL(ROUND(SUM(p.price * u.units) / SUM(u.units), 2), 0) average_price
+FROM Prices p LEFT JOIN UnitsSold u
+ON p.product_id = u.product_id AND u.purchase_date BETWEEN p.start_date AND p.end_date
+GROUP BY p.product_id
+-- 1280
+SELECT stu.student_id, stu.student_name, sub.subject_name, COUNT(e.subject_name) attended_exams
+FROM Students stu
+JOIN Subjects sub
+LEFT JOIN Examinations e
+ON stu.student_id = e.student_id AND sub.subject_name = e.subject_name
+GROUP BY stu.student_id, sub.subject_name
+ORDER BY stu.student_id, sub.subject_name
+-- 1321
+SELECT c1.visited_on, SUM(c2.amount) amount, ROUND(SUM(c2.amount) / 7, 2) average_amount
+FROM (SELECT DISTINCT visited_on FROM Customer) c1
+JOIN Customer c2
+ON DATEDIFF(c1.visited_on, c2.visited_on) BETWEEN 0 AND 6
+GROUP BY c1.visited_on HAVING COUNT(DISTINCT c2.visited_on) = 7
+
+SELECT visited_on, SUM(amount) OVER (ORDER BY visited_on ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) amount
+FROM Customer
+GROUP BY visited_on
