@@ -196,6 +196,22 @@ FROM Project p
 JOIN Employee e
 ON p.employee_id = e.employee_id
 GROUP BY p.project_id
+-- 1084 COUNT( OR NULL) SUM
+SELECT product_id, product_name
+FROM Product
+WHERE product_id IN
+(SELECT product_id
+FROM Sales
+GROUP BY product_id
+HAVING MIN(sale_date) BETWEEN '2019-01-01' AND '2019-03-31'
+AND MAX(sale_date) BETWEEN '2019-01-01' AND '2019-03-31')
+
+SELECT p.product_id, product_name
+FROM Product p
+JOIN Sales s
+ON p.product_id = s.product_id
+GROUP BY product_id
+HAVING SUM(sale_date BETWEEN '2019-01-01' AND '2019-03-31') = COUNT(1)
 -- 1141 DATEDIFF DATE_ADD DATE_SUB
 SELECT activity_date day, COUNT(DISTINCT user_id) active_users
 FROM Activity
@@ -228,6 +244,18 @@ FROM Views
 WHERE author_id = viewer_id
 GROUP BY author_id
 ORDER BY id
+-- 1158 条件放在 ON 或 WHERE
+SELECT u.user_id buyer_id, u.join_date, COUNT(o.order_id) orders_in_2019
+FROM Users u
+LEFT JOIN Orders o
+ON u.user_id = o.buyer_id AND order_date LIKE '2019%'
+GROUP BY u.user_id
+
+SELECT u.user_id buyer_id, u.join_date, IFNULL(SUM(order_date LIKE '2019%'), 0) orders_in_2019
+FROM Users u
+LEFT JOIN Orders o
+ON u.user_id = o.buyer_id
+GROUP BY u.user_id
 -- 1164 最新用 GROUP BY MAX 也可以用窗口函数
 SELECT p.product_id, IFNULL(t.new_price, 10) price
 FROM
@@ -326,3 +354,36 @@ GROUP BY c1.visited_on HAVING COUNT(DISTINCT c2.visited_on) = 7
 SELECT visited_on, SUM(amount) OVER (ORDER BY visited_on ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) amount
 FROM Customer
 GROUP BY visited_on
+-- 1327 日期可以模糊搜索
+SELECT p.product_name, SUM(unit) unit
+FROM Orders o
+JOIN Products p
+USING (product_id)
+WHERE o.order_date BETWEEN '2020-02-01' AND '2020-02-29'
+GROUP BY p.product_name
+HAVING unit >= 100
+
+SELECT p.product_name, SUM(unit) unit
+FROM Orders o
+JOIN Products p
+USING (product_id)
+WHERE o.order_date LIKE '2020-02%'
+GROUP BY p.product_name
+HAVING unit >= 100
+-- 1341 UNION ALL
+(SELECT name results
+FROM MovieRating
+JOIN Users
+USING (user_id)
+GROUP BY name
+ORDER BY COUNT(1) DESC, name
+LIMIT 1)
+UNION ALL
+(SELECT title results
+FROM MovieRating
+JOIN Movies
+USING (movie_id)
+WHERE created_at LIKE '2020-02%'
+GROUP BY title
+ORDER BY AVG(rating) DESC, title
+LIMIT 1)
