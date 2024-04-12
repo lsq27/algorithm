@@ -173,6 +173,11 @@ SELECT customer_id
 FROM customer
 GROUP BY customer_id
 HAVING COUNT(DISTINCT product_key) = (SELECT COUNT(1) FROM product)
+-- 1050
+SELECT actor_id, director_id
+FROM ActorDirector
+GROUP BY actor_id, director_id
+HAVING COUNT(1) >= 3
 -- 1068
 -- USING 适用于两个表之间有同名列的情况，可以简化语法；
 -- ON 适用于没有同名列或需要指定非等值匹配的情况，使用更灵活；
@@ -190,6 +195,18 @@ SELECT product_name, year, price
 FROM Sales
 JOIN Product
 USING (product_id)
+-- 1070 分步或窗口函数
+SELECT product_id, year first_year, quantity, price
+FROM Sales
+WHERE (product_id, year) IN
+(SELECT product_id, MIN(year) FROM Sales GROUP BY product_id)
+
+SELECT product_id, year first_year, quantity, price
+FROM
+(SELECT product_id, year, quantity, price, RANK() OVER (PARTITION BY product_id ORDER BY year) rnk
+FROM Sales) t
+WHERE rnk = 1
+ORDER BY product_id
 -- 1075
 SELECT p.project_id, ROUND(AVG(experience_years), 2) average_years
 FROM Project p
@@ -387,3 +404,35 @@ WHERE created_at LIKE '2020-02%'
 GROUP BY title
 ORDER BY AVG(rating) DESC, title
 LIMIT 1)
+-- 1393 不需要买入卖出匹配相减
+SELECT stock_name, SUM(IF(operation = 'Sell', price, -price)) capital_gain_loss
+FROM Stocks
+GROUP BY stock_name
+-- 1407 重名的情况需要考虑 GROUP BY u.id，MySQL 可以取非聚合列
+SELECT u.name, SUM(IFNULL(r.distance, 0)) travelled_distance
+FROM Users u
+LEFT JOIN Rides r
+ON u.id = r.user_id
+GROUP BY u.id
+ORDER BY travelled_distance DESC, name
+-- 1484 组内数据拼接 GROUP_CONCAT(DISTINCT expression1 ORDER BY expression2 SEPARATOR sep)
+SELECT sell_date, COUNT(DISTINCT product) num_sold, GROUP_CONCAT(DISTINCT product ORDER BY product SEPARATOR ',') products
+FROM Activities
+GROUP BY sell_date
+ORDER BY sell_date
+-- 1517 REGEXP 正则，想输入\.需要用\\.
+SELECT user_id, name, mail
+FROM Users
+WHERE mail REGEXP '^[a-zA-Z][a-zA-Z0-9_.-]*\\@leetcode\\.com$'
+-- 1527 正则
+SELECT patient_id, patient_name, conditions
+FROM Patients
+WHERE conditions LIKE 'DIAB1%' OR conditions LIKE '% DIAB1%' 
+
+SELECT patient_id, patient_name, conditions
+FROM Patients
+WHERE conditions REGEXP '\\bDIAB1'
+
+SELECT patient_id, patient_name, conditions
+FROM Patients
+WHERE conditions REGEXP '^DIAB1| DIAB1'
